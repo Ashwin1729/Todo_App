@@ -1,4 +1,3 @@
-import { ProColumns } from "@ant-design/pro-components";
 import {
   EditableProTable,
   ProCard,
@@ -6,6 +5,7 @@ import {
   ProFormRadio,
 } from "@ant-design/pro-components";
 import { Popconfirm, Space, Tag, Input } from "antd";
+import getColumnSearchProps from "./components/ColumnSearchProp";
 import React, { useState, useRef } from "react";
 import "./App.css";
 
@@ -15,6 +15,11 @@ const waitTime = (time = 20) => {
       resolve(true);
     }, time);
   });
+};
+
+const processDate = (date) => {
+  const parts = date.split("-");
+  return new Date(parts[2], parts[1] - 1, parts[0]);
 };
 
 const TagList = ({ value, onChange }) => {
@@ -86,14 +91,31 @@ function App() {
   const [editableKeys, setEditableRowKeys] = useState([]);
   const [dataSource, setDataSource] = useState([]);
   const [position, setPosition] = useState("bottom");
-  const [time, setTime] = useState("");
+  // const [lables, setLables] = useState([]);
+
+  // search prop hooks
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef(null);
+
+  // search prop helper functions
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText("");
+  };
 
   const columns = [
     {
       title: "Timestamp",
       dataIndex: "timestamp",
       tooltip: "Timestamp at which a task was created",
-      width: "10%",
+      width: "12%",
       readonly: true,
       formItemProps: {
         rules: [
@@ -102,6 +124,22 @@ function App() {
           },
         ],
       },
+      sorter: {
+        compare: (a, b) => {
+          const date1 = a.timestamp.split(" ")[0];
+          const date2 = b.timestamp.split(" ")[0];
+
+          const time1 = a.timestamp.split(" ")[2];
+          const time2 = b.timestamp.split(" ")[2];
+
+          if (date1 === date2) {
+            return time1 > time2;
+          } else {
+            return processDate(date1) > processDate(date2);
+          }
+        },
+      },
+      sortDirections: ["descend", "ascend"],
     },
     {
       title: "Title",
@@ -117,10 +155,12 @@ function App() {
           },
         ],
       },
-      sorter: (a, b) => {
-        return a.title.localeCompare(b.title);
+      sorter: {
+        compare: (a, b) => {
+          return a.title.localeCompare(b.title);
+        },
       },
-      render: (text, record) => <span>{record.title}</span>,
+      sortDirections: ["descend", "ascend"],
     },
     {
       title: "Description",
@@ -136,12 +176,24 @@ function App() {
           },
         ],
       },
+      sorter: {
+        compare: (a, b) => {
+          return a.description.localeCompare(b.description);
+        },
+      },
+      sortDirections: ["descend", "ascend"],
     },
     {
       title: "Due Date",
       dataIndex: "due_date",
       tooltip: "Expected due date to finish the task",
       valueType: "date",
+      sorter: {
+        compare: (a, b) => {
+          return processDate(a.due_date) > processDate(b.due_date);
+        },
+      },
+      sortDirections: ["descend", "ascend"],
     },
     {
       title: "Tag",
@@ -150,8 +202,16 @@ function App() {
       renderFormItem: (_, { isEditable }) => {
         return isEditable ? <TagList /> : <Input />;
       },
-      render: (_, row) =>
-        row?.labels?.map((item) => <Tag key={item.key}>{item.label}</Tag>),
+      ...getColumnSearchProps(
+        "labels",
+        handleSearch,
+        handleReset,
+        searchText,
+        setSearchText,
+        searchedColumn,
+        setSearchedColumn,
+        searchInput
+      ),
     },
     {
       title: "Status",
@@ -202,9 +262,7 @@ function App() {
         },
       ],
       onFilter: (value, record) => {
-        console.log(value);
-        console.log(record);
-        return record.index === 0;
+        return record.status.toUpperCase() === value.toUpperCase();
       },
     },
     {
@@ -312,7 +370,7 @@ function App() {
         ]}
         columns={columns}
         request={async () => ({
-          data: defaultData,
+          data: dataSource,
           total: 30,
           success: true,
         })}
@@ -323,7 +381,6 @@ function App() {
           editableKeys,
           onSave: async (rowKey, data, row) => {
             console.log(rowKey, data, row);
-            setTime(new Date().toISOString());
             await waitTime(500);
           },
           onChange: setEditableRowKeys,
@@ -331,7 +388,7 @@ function App() {
         // search={{ searchText: "Search", labelWidth: "auto" }}
         pagination={{
           pageSize: 10,
-          position: ["bottomCenter"],
+          // position: ["bottomCenter"],
         }}
       />
 
