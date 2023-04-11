@@ -93,7 +93,7 @@ const getColumnSearchProps = (
   ),
 
   onFilter: (value, record) => {
-    const tagLst = record[dataIndex].map((tag) => {
+    const tagLst = record[dataIndex]?.map((tag) => {
       return tag.label;
     });
 
