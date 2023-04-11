@@ -384,11 +384,11 @@ function App() {
         loading={false}
         toolBarRender={toolBarFunct}
         columns={columns}
-        request={async () => ({
-          data: dataSource,
-          total: 30,
-          success: true,
-        })}
+        // request={async () => ({
+        //   data: dataSource,
+        //   total: 30,
+        //   success: true,
+        // })}
         value={dataSource}
         onChange={setDataSource}
         editable={{
@@ -406,6 +406,7 @@ function App() {
           },
           pageSize: 10,
           position: ["bottomCenter"],
+          total: dataSource.length,
         }}
       />
 
