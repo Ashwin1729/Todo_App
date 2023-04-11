@@ -7,6 +7,7 @@ import {
 import { Popconfirm, Input } from "antd";
 import getColumnSearchProps from "./components/ColumnSearchProp";
 import TagList from "./components/TagList";
+import Header from "./components/Header";
 import React, { useState, useRef } from "react";
 import "./App.css";
 
@@ -25,27 +26,6 @@ const processDate = (date) => {
   return new Date(parts[2], parts[1] - 1, parts[0]);
 };
 
-// const defaultData = [
-//   {
-//     id: 624748504,
-//     title: "title 1",
-//     readonly: "true",
-//     decs: "decs",
-//     state: "open",
-//     created_at: "1590486176000",
-//     update_at: "1590486176000",
-//   },
-//   {
-//     id: 624691229,
-//     title: "title 2",
-//     readonly: "flase",
-//     decs: "decs",
-//     state: "closed",
-//     created_at: "1590481162000",
-//     update_at: "1590481162000",
-//   },
-// ];
-
 function App() {
   const [editableKeys, setEditableRowKeys] = useState([]);
   const [dataSource, setDataSource] = useState([]);
@@ -53,6 +33,10 @@ function App() {
 
   // search hook
   const [searchedLabel, setSearchedLabel] = useState("");
+
+  // timestamp hook
+
+  const [timestamp, setTimestamp] = useState("");
 
   // search prop hooks
   const [searchText, setSearchText] = useState("");
@@ -226,7 +210,7 @@ function App() {
         rules: [
           {
             max: 1000,
-            // required: true,
+            required: true,
             whitespace: true,
           },
         ],
@@ -277,7 +261,7 @@ function App() {
       formItemProps: {
         rules: [
           {
-            // required: true,
+            required: true,
           },
         ],
       },
@@ -331,6 +315,8 @@ function App() {
         minutes +
         ":" +
         seconds;
+
+      setTimestamp(currentdate.getFullYear() + "-" + month + "-" + date);
       return {
         id: (Math.random() * 1000000).toFixed(0),
         timestamp: datetime,
@@ -364,6 +350,7 @@ function App() {
 
   return (
     <>
+      <Header />
       <Input.Search
         placeholder="Search ..."
         style={{
@@ -384,11 +371,6 @@ function App() {
         loading={false}
         toolBarRender={toolBarFunct}
         columns={columns}
-        // request={async () => ({
-        //   data: dataSource,
-        //   total: 30,
-        //   success: true,
-        // })}
         value={dataSource}
         onChange={setDataSource}
         editable={{
