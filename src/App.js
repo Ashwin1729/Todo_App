@@ -4,11 +4,12 @@ import {
   ProFormField,
   ProFormRadio,
 } from "@ant-design/pro-components";
-import { Popconfirm, Input } from "antd";
+import { Popconfirm, Input, message } from "antd";
 import getColumnSearchProps from "./components/ColumnSearchProp";
 import TagList from "./components/TagList";
 import Header from "./components/Header";
 import React, { useState, useRef } from "react";
+import dayjs from "dayjs";
 import "./App.css";
 
 const waitTime = (time = 20) => {
@@ -34,8 +35,8 @@ function App() {
   // search hook
   const [searchedLabel, setSearchedLabel] = useState("");
 
-  // timestamp hook
-
+  // timestamp and confirmation hooks
+  const [messageApi, contextHolder] = message.useMessage();
   const [timestamp, setTimestamp] = useState("");
 
   // search prop hooks
@@ -159,6 +160,11 @@ function App() {
     ) : null,
   ];
 
+  // Date control configuration
+  const disabledDate = (current) => {
+    return current && current < dayjs().startOf("day");
+  };
+
   // Table columns defination and configurations
 
   const columns = [
@@ -227,6 +233,11 @@ function App() {
       dataIndex: "due_date",
       tooltip: "Expected due date to finish the task",
       valueType: "date",
+      fieldProps: () => {
+        return {
+          disabledDate: disabledDate,
+        };
+      },
       sorter: {
         compare: (a, b) => {
           return processDate(a.due_date) > processDate(b.due_date);
@@ -351,6 +362,7 @@ function App() {
   return (
     <>
       <Header />
+      {contextHolder}
       <Input.Search
         placeholder="Search ..."
         style={{
@@ -378,6 +390,14 @@ function App() {
           editableKeys,
           onSave: async (rowKey, data, row) => {
             console.log(rowKey, data, row);
+
+            // Confirmation message config
+
+            messageApi.open({
+              type: "success",
+              content: "Task added successfully!",
+            });
+
             await waitTime(500);
           },
           onChange: setEditableRowKeys,
